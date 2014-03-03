@@ -1,6 +1,7 @@
 /* 
- * File:   servo_driver.c
- * Author: Chris Luke <chrisy@flirble.org>
+ * File:    servo_driver.c
+ * Author:  Chris Luke <chrisy@flirble.org>
+ * License: MIT (c) 2014 Chris Luke
  *
  * Created on February 28, 2014, 8:46 AM
  */
