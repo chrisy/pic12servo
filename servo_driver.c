@@ -14,10 +14,14 @@
  * Simple loop to read ADC value and set PWM duty
  * to the same value as a ratio of its range.
  * GP0 is the analog input. Pin 7.
+ * GP1 is unused though the board connects it to 0v for shielding. Pin 6.
  * GP2 is the PWM outut. Pin 5.
+ * GP3 is unused. Pin 4.
+ * GP4 is a loop-interval toggle output. Pin 3.
+ * GP5 is an LED output. Pin 2.
  */
 int main(int argc, char **argv) {
-    unsigned int period;
+    unsigned int period, count;
 
     /* Set the clock speed */
     OSCCONbits.IRCF = SET_IRCF;
@@ -67,6 +71,18 @@ int main(int argc, char **argv) {
             100.0
     );
 
+    /* We have an LED on GP5 */
+    TRISIO5 = 0;
+    GP5 = 1;
+    count = 0;
+
+    /* And we toggle GP4 for each iteration of the loop;
+     * There's no real reason for this, other than we can
+     * hook it up to an oscilloscope to time the loop
+     * interval */
+    TRISIO4 = 0;
+    GP4 = 0;
+
     /* Let it all settle */
     __delay_ms(1);
     
@@ -102,6 +118,14 @@ int main(int argc, char **argv) {
 
         /* Wait a while - mostly to let ADC reset. */
         __delay_us(100);
+
+        /* Flash the LED */
+        if(!++count) {
+            GP5 = !GP5;
+        }
+
+        /* Toggle GP4 */
+        GP4 = !GP4;
     }
 }
 
