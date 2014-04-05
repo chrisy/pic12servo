@@ -15179,6 +15179,11 @@ Source: www.kingbright.com</description>
 <sheets>
 <sheet>
 <plain>
+<text x="150.114" y="24.384" size="1.778" layer="91">ServoDriver for the Stockton Marine Science Program.
+MIT License. (c) 2014 Chris Luke.
+
+Source code at https://github.com/chrisy/pic12servo</text>
+<text x="241.3" y="7.62" size="1.778" layer="91">2</text>
 </plain>
 <instances>
 <instance part="FRAME1" gate="G$1" x="0" y="0"/>
@@ -15435,4 +15440,10 @@ Source: www.kingbright.com</description>
 </errors>
 </schematic>
 </drawing>
+<compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
+</compatibility>
 </eagle>
