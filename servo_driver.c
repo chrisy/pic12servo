@@ -2,10 +2,9 @@
  * File:    servo_driver.c
  * Author:  Chris Luke <chrisy@flirble.org>
  * License: MIT (c) 2014 Chris Luke
- *
- * Created on February 28, 2014, 8:46 AM
  */
 
+#include "servo_driver.h"
 #include "config.h"
 #include <xc.h>
 
@@ -22,16 +21,25 @@
  */
 int main(int argc, char **argv) {
     unsigned int period, count;
+    char o4, o5;
 
     /* Set the clock speed */
     OSCCONbits.IRCF = SET_IRCF;
     WDTCON = 0x0; /* Make sure watchdog is disabled */
 
     di(); /* No need for interrupts */
+
+    /* Make sure unused timers are off */
+    TMR1ON = 0;
+    T1OSCEN = 0;
+    CMCON1 = 0;
+
+    /* Setup the I/O */
     GPIO = 0; /* Make sure all outputs are low */
     CMCON0bits.CM = 0b111; /* Disable comparators */
-    TRISIO = 0b111111; /* Default all IO to input */
+    TRISIO = 0b001111; /* 4,5=out, 0,1,2,3=in */
     nGPPU = 0; /* Enable pullups */
+
 
     /* Setup ADC */
     ADCON0bits.ADFM = 1; /* right justified result */
@@ -59,6 +67,7 @@ int main(int argc, char **argv) {
         continue;
     }
     TRISIO2 = 0; /* Set the pin as output */
+    WPU2 = 0; /* Disable any pullup */
 
     /* Calculate the PWM period from what we set PR2 to.
      * This will be ms*100, something like 1638 (61Hz) */
@@ -73,18 +82,20 @@ int main(int argc, char **argv) {
 
     /* We have an LED on GP5 */
     TRISIO5 = 0;
-    GP5 = 1;
+    WPU5 = 0; /* Disable any pullup */
+    o5 = 1;
     count = 0;
 
-    /* And we toggle GP4 for each iteration of the loop;
+    /* And we will toggle GP4 for each iteration of the loop;
      * There's no real reason for this, other than we can
      * hook it up to an oscilloscope to time the loop
      * interval */
     TRISIO4 = 0;
-    GP4 = 0;
+    WPU4 = 0; /* Disable any pullup */
+    o4 = 1;
 
     /* Let it all settle */
-    __delay_ms(1);
+    __delay_ms(10);
     
     for(;;) { /* Loop forver */
         unsigned int value, pulse;
@@ -120,12 +131,15 @@ int main(int argc, char **argv) {
         __delay_us(100);
 
         /* Flash the LED */
-        if(!++count) {
-            GP5 = !GP5;
+        ++count;
+        if(!count) {
+            o5 = o5 == 1 ? 0 : 1;
+            GP5 = o5;
         }
 
         /* Toggle GP4 */
-        GP4 = !GP4;
+        o4 = o4 == 1 ? 0 : 1;
+        GP4 = o4;
     }
 }
 
