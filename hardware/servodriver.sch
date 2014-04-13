@@ -15170,11 +15170,11 @@ Source: www.kingbright.com</description>
 <part name="D1" library="diode" deviceset="1N4004" device=""/>
 <part name="R2" library="rcl" deviceset="R-EU_" device="0207/10" value="0R"/>
 <part name="LED1" library="led" deviceset="LED" device="3MM"/>
-<part name="R3" library="rcl" deviceset="R-EU_" device="0207/10" value="150R"/>
+<part name="R3" library="rcl" deviceset="R-EU_" device="0207/10" value="620R"/>
 <part name="P+7" library="supply1" deviceset="+5V" device=""/>
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
 <part name="LED2" library="led" deviceset="LED" device="3MM"/>
-<part name="R4" library="rcl" deviceset="R-EU_" device="0207/10" value="150R"/>
+<part name="R4" library="rcl" deviceset="R-EU_" device="0207/10" value="620R"/>
 </parts>
 <sheets>
 <sheet>
