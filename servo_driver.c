@@ -8,10 +8,7 @@
 #include "config.h"
 #include <xc.h>
 
-
-/*
- * Simple loop to read ADC value and set PWM duty
- * to the same value as a ratio of its range.
+/* Initialize the hardware
  * GP0 is the analog input. Pin 7.
  * GP1 is unused though the board connects it to 0v for shielding. Pin 6.
  * GP2 is the PWM outut. Pin 5.
@@ -19,32 +16,25 @@
  * GP4 is a loop-interval toggle output. Pin 3.
  * GP5 is an LED output. Pin 2.
  */
-int main(int argc, char **argv) {
-    unsigned int period, count;
-    char o4, o5;
-
-    /* Set the clock speed */
-    OSCCONbits.IRCF = SET_IRCF;
-    WDTCON = 0x0; /* Make sure watchdog is disabled */
+void init(void)
+{
+    OSCCONbits.IRCF = SET_IRCF; /* Set the clock speed */
+    WDTCON = 0; /* Make sure watchdog is disabled */
+    T1CON = 0; /* Make sure unused timers are off */
 
     di(); /* No need for interrupts */
 
-    /* Make sure unused timers are off */
-    TMR1ON = 0;
-    T1OSCEN = 0;
-    CMCON1 = 0;
-
     /* Setup the I/O */
+    OPTION_REG = 0; /* Pullups via WPU */
+    WPU = 0; /* No pullups to start with */
     GPIO = 0; /* Make sure all outputs are low */
-    CMCON0bits.CM = 0b111; /* Disable comparators */
+    CMCON0 = 7; /* Disable the comparator */
+    CMCON1 = 0;
     TRISIO = 0b001111; /* 4,5=out, 0,1,2,3=in */
-    nGPPU = 0; /* Enable pullups */
-
 
     /* Setup ADC */
     ADCON0bits.ADFM = 1; /* right justified result */
     ADCON0bits.VCFG = 0; /* Use Vdd as Vref */
-    WPU0 = 0; /* Disable pullup on this input */
     ADCON0bits.CHS = 0; /* Select channel 0 */
     GO_DONE = 0; /* Make sure this is cleared */
     ANSELbits.ANS = 1; /* Only channel 0 is enabled */
@@ -67,7 +57,33 @@ int main(int argc, char **argv) {
         continue;
     }
     TRISIO2 = 0; /* Set the pin as output */
-    WPU2 = 0; /* Disable any pullup */
+
+    /* We have an LED on GP5 */
+    TRISIO5 = 0;
+    WPU5 = 0; /* Disable any pullup */
+
+    /* And we will toggle GP4 for each iteration of the loop;
+     * There's no real reason for this, other than we can
+     * hook it up to an oscilloscope to time the loop
+     * interval */
+    TRISIO4 = 0;
+    WPU4 = 0; /* Disable any pullup */
+
+    /* Let it all settle */
+    __delay_ms(10);
+}
+
+/*
+ * Simple loop to read ADC value and set PWM duty
+ * to the same value as a ratio of its range.
+ */
+int main(int argc, char **argv)
+{
+    unsigned int period, count;
+    char o4, o5;
+
+    /* Initialize the hardware */
+    init();
 
     /* Calculate the PWM period from what we set PR2 to.
      * This will be ms*100, something like 1638 (61Hz) */
@@ -80,26 +96,12 @@ int main(int argc, char **argv) {
             100.0
     );
 
-    /* We have an LED on GP5 */
-    TRISIO5 = 0;
-    WPU5 = 0; /* Disable any pullup */
-    o5 = 1;
+    /* This is the LED flashing loop counter */
     count = 0;
 
-    /* And we will toggle GP4 for each iteration of the loop;
-     * There's no real reason for this, other than we can
-     * hook it up to an oscilloscope to time the loop
-     * interval */
-    TRISIO4 = 0;
-    WPU4 = 0; /* Disable any pullup */
-    o4 = 1;
-
-    /* Let it all settle */
-    __delay_ms(10);
-    
     for(;;) { /* Loop forver */
         unsigned int value, pulse;
-        
+
         /* Trigger ADC. */
         GO_DONE = 1;
 
@@ -128,18 +130,21 @@ int main(int argc, char **argv) {
         CCPR1L = (pulse >> 2) & 0xff; /* Eight MSB's */
 
         /* Wait a while - mostly to let ADC reset. */
-        __delay_us(100);
+        //__delay_us(100);
 
         /* Flash the LED */
         ++count;
-        if(!count) {
+        if(count > 10) {
+            count = 0;
             o5 = o5 == 1 ? 0 : 1;
-            GP5 = o5;
         }
 
         /* Toggle GP4 */
         o4 = o4 == 1 ? 0 : 1;
-        GP4 = o4;
+
+        /* We collate the GPIO output into a single call here
+         * because of a well known 'read-modify-write' issue with
+         * PIC chips without a separate latch output register. */
+        GPIO = (o5 << 5) | (o4 << 4);
     }
 }
-

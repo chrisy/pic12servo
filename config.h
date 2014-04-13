@@ -20,10 +20,10 @@ extern "C" {
 #pragma config BOREN = 0x0          // Brown-out detect off
 #pragma config CPD = OFF            // Data EEPROM protection
 #pragma config CP = OFF             // Code EEPROM protection
-#pragma config MCLRE = OFF          // !MCLR disable
+#pragma config MCLRE = ON          // !MCLR disable
 #pragma config PWRTE = ON           // Power up timer disable
 #pragma config WDTE = OFF           // Watchdog timer disable
-#pragma config FOSC = 0b100         // Internal clock, I/O on RA4/RA5
+#pragma config FOSC = INTOSCIO           // Internal clock, I/O on RA4/RA5
 #else
 #error This code is designed for a PIC12F683!
 #endif
