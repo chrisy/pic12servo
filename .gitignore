@@ -6,3 +6,5 @@ nbproject
 funclist
 l.obj
 Makefile
+*.log
+*.log.inx
